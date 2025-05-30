@@ -12,3 +12,14 @@ datasource db {
   provider = "postgresql"
   url      = env("DB_URL")
 }
+
+model Task {
+  id                String   @id @default(uuid())
+  titulo            String   @db.VarChar(100)
+  descripcion       String?  @db.VarChar(500)
+  status            String   @default("pendiente") @db.VarChar(50)
+  fechaCreacion     DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+
+  @@map("tasks")
+}

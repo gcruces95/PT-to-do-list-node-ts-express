@@ -2,6 +2,7 @@
 
 mongo/
 /postgres
+migrations/
 node_modules/
 dist/
 build/
