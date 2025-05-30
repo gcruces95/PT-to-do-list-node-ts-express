@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
+import { errorHandler } from './middlewares/error.middleware';
 
 interface Options {
     port: number;
@@ -45,6 +46,9 @@ export class Server {
         //* Public folder
         this.app.use(express.static(path.join(__dirname, '../../public')));
 
+        //* Error handling middleware (debe ir después de las rutas)
+        this.app.use(errorHandler);
+
         //* Socket.IO connection handling
         this.io.on('connection', (socket) => {
             console.log(`Cliente conectado: ${socket.id}`);
@@ -61,7 +65,7 @@ export class Server {
         });
 
         //* Serve index.html for all other routes (SPA support) - MUST BE LAST
-        this.app.get(/^(?!\/socket\.io).*/, (req, res) => {
+        this.app.get(/^(?!\/socket\.io|\/api).*/, (req, res) => {
             const indexPath = path.join(__dirname, '../../', this.public_path, 'index.html');
             res.sendFile(indexPath);
         });

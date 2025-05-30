@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { Server as SocketServer } from 'socket.io';
 import { 
   CreateTaskDto, 
@@ -9,6 +9,7 @@ import {
   DeleteTask
 } from '../../domain';
 import { TaskRepository } from '../../data/task.repository';
+import { CustomError } from '../../domain/errors/custom.errors';
 
 export class TaskController {
   private createTaskUseCase: CreateTask;
@@ -26,16 +27,12 @@ export class TaskController {
     this.io = io;
   }
 
-  createTask = async (req: Request, res: Response): Promise<void> => {
+  createTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const [error, createTaskDto] = CreateTaskDto.create(req.body);
 
       if (error) {
-        res.status(400).json({
-          success: false,
-          message: error,
-        });
-        return;
+        throw CustomError.badRequest(error);
       }
 
       const newTask = await this.createTaskUseCase.execute(createTaskDto!);
@@ -49,15 +46,11 @@ export class TaskController {
         message: 'Tarea creada exitosamente',
       });
     } catch (error) {
-      console.error('Error creating task:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor',
-      });
+      next(error);
     }
   };
 
-  getAllTasks = async (req: Request, res: Response): Promise<void> => {
+  getAllTasks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const tasks = await this.getTasksUseCase.execute();
 
@@ -67,35 +60,29 @@ export class TaskController {
         message: 'Tareas obtenidas exitosamente',
       });
     } catch (error) {
-      console.error('Error getting tasks:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor',
-      });
+      next(error);
     }
   };
 
-  updateTask = async (req: Request, res: Response): Promise<void> => {
+  updateTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
+      
+      // Validar que el ID sea proporcionado
+      if (!id || id.trim() === '') {
+        throw CustomError.badRequest('ID de tarea es requerido');
+      }
+
       const [error, updateTaskDto] = UpdateTaskDto.create(req.body);
 
       if (error) {
-        res.status(400).json({
-          success: false,
-          message: error,
-        });
-        return;
+        throw CustomError.badRequest(error);
       }
 
       const updatedTask = await this.updateTaskUseCase.execute(id, updateTaskDto!);
 
       if (!updatedTask) {
-        res.status(404).json({
-          success: false,
-          message: 'Tarea no encontrada',
-        });
-        return;
+        throw CustomError.notFound('Tarea no encontrada');
       }
 
       // Aqui se emite el evento de tarea actualizada
@@ -111,26 +98,23 @@ export class TaskController {
         message: 'Tarea actualizada exitosamente',
       });
     } catch (error) {
-      console.error('Error updating task:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor',
-      });
+      next(error);
     }
   };
 
-  deleteTask = async (req: Request, res: Response): Promise<void> => {
+  deleteTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
+
+      // Validar que el ID sea proporcionado
+      if (!id || id.trim() === '') {
+        throw CustomError.badRequest('ID de tarea es requerido');
+      }
 
       const deleted = await this.deleteTaskUseCase.execute(id);
 
       if (!deleted) {
-        res.status(404).json({
-          success: false,
-          message: 'Tarea no encontrada',
-        });
-        return;
+        throw CustomError.notFound('Tarea no encontrada');
       }
 
       // Aqui se emite el evento de tarea eliminada
@@ -141,11 +125,7 @@ export class TaskController {
         message: 'Tarea eliminada exitosamente',
       });
     } catch (error) {
-      console.error('Error deleting task:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor',
-      });
+      next(error);
     }
   };
 } 
