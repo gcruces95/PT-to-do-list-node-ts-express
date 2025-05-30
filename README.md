@@ -14,6 +14,22 @@ Una aplicación completa de gestión de tareas (To-Do List) construida con Node.
 - 🐳 **Containerización** con Docker Compose
 - 🔍 **UUIDs** para identificadores únicos de tareas
 
+## 🌐 Demo en Vivo
+
+🚀 **¡Prueba la aplicación ahora mismo!** 
+
+Puedes acceder a una demo funcional de la aplicación en:
+
+**➡️ [https://pt-to-do-list-node-ts-express-production.up.railway.app/](https://pt-to-do-list-node-ts-express-production.up.railway.app/)**
+
+La demo incluye:
+- ✅ Todas las funcionalidades de la aplicación
+- 🔄 Actualizaciones en tiempo real con WebSockets
+- 📱 Interfaz responsive que funciona en móviles y escritorio
+- 🎯 API completa disponible en `/api/tasks`
+
+*Nota: La demo está desplegada en Railway y puede tomar unos segundos en cargar si ha estado inactiva.*
+
 ## 📋 Requisitos Previos
 
 - Node.js (versión 18 o superior)
