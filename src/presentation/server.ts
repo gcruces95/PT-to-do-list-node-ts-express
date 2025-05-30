@@ -1,59 +1,52 @@
-
 import express, { Router } from 'express';
+import cors from 'cors';
 import path from 'path';
 
 interface Options {
     port: number;
     routes: Router;
-    public_path?: string;
+    public_path: string;
 }
-
 
 export class Server {
 
-    public readonly app = express();
-    private serverListener?: any;
+    private app = express();
     private readonly port: number;
-    private readonly publicPath: string;
+    private readonly public_path: string;
     private readonly routes: Router;
 
     constructor(options: Options) {
-        const { port, routes, public_path = 'public' } = options;
+        const { port, routes, public_path } = options;
         this.port = port;
-        this.publicPath = public_path;
+        this.public_path = public_path;
         this.routes = routes;
     }
 
-
-
     async start() {
 
+        //* Cors
+        this.app.use(cors());
 
-        //* Middlewares
-        this.app.use(express.json()); // raw
-        this.app.use(express.urlencoded({ extended: true })); // x-www-form-urlencoded
-
-        //* Public Folder
-        this.app.use(express.static(this.publicPath));
+        //* Middleware
+        this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
 
         //* Routes
         this.app.use(this.routes);
 
-        //* SPA /^\/(?!api).*/  <== Únicamente si no empieza con la palabra api
+        //* Public folder
+        this.app.use(express.static(path.join(__dirname, '../../public')));
+
         this.app.get('*', (req, res) => {
-            const indexPath = path.join(__dirname + `../../../${this.publicPath}/index.html`);
+            const indexPath = path.join(__dirname + `/../../${this.public_path}/index.html`);
             res.sendFile(indexPath);
+            return;
         });
 
-
-        this.serverListener = this.app.listen(this.port, () => {
-            console.log(`Server running on port ${this.port}`);
+        this.app.listen(this.port, () => {
+            console.log(`Server is running on port ${this.port}`);
         });
 
-    }
-
-    public close() {
-        this.serverListener?.close();
     }
 
 }
