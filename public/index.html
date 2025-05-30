@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas - Tiempo Real</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .connection-status {
+            margin: 20px 30px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .form-section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .tasks-section {
+            padding: 30px;
+        }
+
+        .tasks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .task-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .task-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .task-description {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .task-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .status-pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-en_progreso {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-completada {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-cancelada {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .task-dates {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .no-tasks {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Lista de Tareas</h1>
+            <p>Gestión de tareas en tiempo real con WebSockets</p>
+        </div>
+
+        <div id="connectionStatus" class="connection-status disconnected">
+            🔴 Desconectado del servidor
+        </div>
+
+        <div class="form-section">
+            <h2>➕ Crear Nueva Tarea</h2>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+            
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="titulo">Título *</label>
+                    <input type="text" id="titulo" name="titulo" required maxlength="100" 
+                           placeholder="Ingresa el título de la tarea">
+                </div>
+                
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" name="descripcion" maxlength="500" 
+                              placeholder="Descripción opcional de la tarea"></textarea>
+                </div>
+                
+                <button type="submit" class="btn">Crear Tarea</button>
+            </form>
+        </div>
+
+        <div class="tasks-section">
+            <div class="tasks-header">
+                <h2>📋 Mis Tareas</h2>
+                <span id="taskCount">0 tareas</span>
+            </div>
+            
+            <div id="tasksList">
+                <div class="no-tasks">
+                    No hay tareas creadas. ¡Crea tu primera tarea!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Configuración del cliente Socket.IO
+        const socket = io();
+        
+        // Referencias a elementos del DOM
+        const connectionStatus = document.getElementById('connectionStatus');
+        const taskForm = document.getElementById('taskForm');
+        const tasksList = document.getElementById('tasksList');
+        const taskCount = document.getElementById('taskCount');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Estado de la aplicación
+        let tasks = [];
+
+        // Eventos de conexión WebSocket
+        socket.on('connect', () => {
+            connectionStatus.textContent = '🟢 Conectado al servidor';
+            connectionStatus.className = 'connection-status connected';
+            loadTasks();
+        });
+
+        socket.on('disconnect', () => {
+            connectionStatus.textContent = '🔴 Desconectado del servidor';
+            connectionStatus.className = 'connection-status disconnected';
+        });
+
+        // Eventos de tareas en tiempo real
+        socket.on('newTask', (task) => {
+            tasks.unshift(task);
+            renderTasks();
+            showMessage('Nueva tarea creada en tiempo real!', 'success');
+        });
+
+        socket.on('taskUpdated', (updatedData) => {
+            const taskIndex = tasks.findIndex(task => task.id === updatedData.id);
+            if (taskIndex !== -1) {
+                tasks[taskIndex].status = updatedData.status;
+                tasks[taskIndex].fechaActualizacion = updatedData.fechaActualizacion;
+                renderTasks();
+                showMessage('Tarea actualizada en tiempo real!', 'success');
+            }
+        });
+
+        socket.on('taskDeleted', (data) => {
+            tasks = tasks.filter(task => task.id !== data.id);
+            renderTasks();
+            showMessage('Tarea eliminada en tiempo real!', 'success');
+        });
+
+        // Cargar tareas desde el servidor
+        async function loadTasks() {
+            try {
+                const response = await fetch('/api/tasks');
+                const data = await response.json();
+                
+                if (data.success) {
+                    tasks = data.data;
+                    renderTasks();
+                } else {
+                    showMessage('Error al cargar las tareas', 'error');
+                }
+            } catch (error) {
+                showMessage('Error de conexión al cargar las tareas', 'error');
+            }
+        }
+
+        // Renderizar lista de tareas
+        function renderTasks() {
+            taskCount.textContent = `${tasks.length} tarea${tasks.length !== 1 ? 's' : ''}`;
+            
+            if (tasks.length === 0) {
+                tasksList.innerHTML = '<div class="no-tasks">No hay tareas creadas. ¡Crea tu primera tarea!</div>';
+                return;
+            }
+
+            tasksList.innerHTML = tasks.map(task => `
+                <div class="task-item">
+                    <div class="task-header">
+                        <div>
+                            <div class="task-title">${escapeHtml(task.titulo)}</div>
+                            ${task.descripcion ? `<div class="task-description">${escapeHtml(task.descripcion)}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="task-meta">
+                        <div class="task-dates">
+                            Creada: ${formatDate(task.fechaCreacion)}<br>
+                            Actualizada: ${formatDate(task.fechaActualizacion)}
+                        </div>
+                        
+                        <div class="task-actions">
+                            <span class="task-status status-${task.status}">${getStatusText(task.status)}</span>
+                            <select onchange="updateTaskStatus('${task.id}', this.value)" ${task.status === 'completada' || task.status === 'cancelada' ? 'disabled' : ''}>
+                                <option value="">Cambiar estado</option>
+                                <option value="pendiente" ${task.status === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="en_progreso" ${task.status === 'en_progreso' ? 'selected' : ''}>En Progreso</option>
+                                <option value="completada" ${task.status === 'completada' ? 'selected' : ''}>Completada</option>
+                                <option value="cancelada" ${task.status === 'cancelada' ? 'selected' : ''}>Cancelada</option>
+                            </select>
+                            <button class="btn btn-small btn-danger" onclick="deleteTask('${task.id}')">Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Crear nueva tarea
+        taskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(taskForm);
+            const taskData = {
+                titulo: formData.get('titulo').trim(),
+                descripcion: formData.get('descripcion').trim() || undefined
+            };
+
+            try {
+                const response = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(taskData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    taskForm.reset();
+                    showMessage('Tarea creada exitosamente!', 'success');
+                } else {
+                    showMessage(data.message || 'Error al crear la tarea', 'error');
+                }
+            } catch (error) {
+                showMessage('Error de conexión al crear la tarea', 'error');
+            }
+        });
+
+        // Actualizar estado de tarea
+        async function updateTaskStatus(taskId, newStatus) {
+            if (!newStatus) return;
+
+            try {
+                const response = await fetch(`/api/tasks/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    showMessage(data.message || 'Error al actualizar la tarea', 'error');
+                    loadTasks(); // Recargar para revertir cambios
+                }
+            } catch (error) {
+                showMessage('Error de conexión al actualizar la tarea', 'error');
+                loadTasks(); // Recargar para revertir cambios
+            }
+        }
+
+        // Eliminar tarea
+        async function deleteTask(taskId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/tasks/${taskId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    showMessage(data.message || 'Error al eliminar la tarea', 'error');
+                }
+            } catch (error) {
+                showMessage('Error de conexión al eliminar la tarea', 'error');
+            }
+        }
+
+        // Funciones auxiliares
+        function showMessage(message, type) {
+            const messageElement = type === 'error' ? errorMessage : successMessage;
+            const otherElement = type === 'error' ? successMessage : errorMessage;
+            
+            otherElement.style.display = 'none';
+            messageElement.textContent = message;
+            messageElement.style.display = 'block';
+            
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString('es-ES');
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pendiente': 'Pendiente',
+                'en_progreso': 'En Progreso',
+                'completada': 'Completada',
+                'cancelada': 'Cancelada'
+            };
+            return statusMap[status] || status;
+        }
+    </script>
+</body>
+</html> 
